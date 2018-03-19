@@ -473,17 +473,44 @@ class RequestTracker
     {
         $responseArray = array();
         $lastkey = null;
+
         foreach ($response as $line) {
-            //RT will always preface a multiline with at least one space
-            if (substr($line, 0, 1)==' ') {
-                $responseArray[$lastkey] .= "\n".trim($line);
-                continue;
+            //RT will always preface a multiline with the length of the last key + length of $delimiter + one space)
+            if(! is_null($lastkey) && preg_match('/^\s{' . ( strlen($lastkey) + strlen($delimiter) + 1 ) . '}(.*)$/', $line, $matches)) {
+                $responseArray[$lastkey] .= "\n" . $matches[1];
             }
-            $parts = explode($delimiter, $line);
-            $key = array_shift($parts);
-            $value = implode($delimiter, $parts);
-            $responseArray[$key] = trim($value);
-            $lastkey=$key;
+            elseif(! is_null($lastkey) && strlen($line) == 0) {
+                $lastkey = null;
+            }
+            elseif(preg_match('/^#/', $line, $matches)) {
+                $responseArray[$line] = '';
+            }
+            elseif(preg_match('~^([a-zA-Z0-9]+|CF\.{[^}]*})' . $delimiter . '\s+(.*)~', $line, $matches)) {
+                $responseArray[$lastkey = $matches[1]] = $matches[2];
+            }
+            elseif ((bool) $line) {
+                if (preg_match('/\s{4}/i', $line))
+                    $line = preg_replace('/\s{4}/i', '', $line);
+
+                $responseArray[$lastkey] .= PHP_EOL . $line;
+            }
+            elseif(is_null($lastkey) && preg_match('/\t/', $line)) {
+                foreach ($response as $line) {
+                    if (preg_match('/\t/', $line)) {
+                        if (is_null($lastkey)) {
+                            $lastkey ++;
+                            $fields = explode("\t", $line);
+                        }
+                        elseif (! is_null($lastkey)) {
+                            $result = explode("\t", $line);
+                                foreach($fields as $key => $val) {
+                                    $combined[$val] = $result[$key];
+                                }
+                            $responseArray[] = $combined;
+                        }
+                    }
+                }
+            }
         }
 
         return $responseArray;
