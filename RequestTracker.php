@@ -488,11 +488,13 @@ class RequestTracker
             elseif(preg_match('~^([a-zA-Z0-9]+|CF\.{[^}]*})' . $delimiter . '\s+(.*)~', $line, $matches)) {
                 $responseArray[$lastkey = $matches[1]] = $matches[2];
             }
-            elseif ((bool) $line) {
-                if (preg_match('/\s{4}/i', $line))
+            elseif ((bool) $line && !is_null($lastkey)) {
+                if (preg_match('/\s{4}/i', $line)){
                     $line = preg_replace('/\s{4}/i', '', $line);
-
-                $responseArray[$lastkey] .= PHP_EOL . $line;
+                }
+                if ($lastkey !== null){
+                        $responseArray[$lastkey] .= PHP_EOL . $line;
+                }
             }
             elseif(is_null($lastkey) && preg_match('/\t/', $line)) {
                 foreach ($response as $line) {
