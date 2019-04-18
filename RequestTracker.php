@@ -472,40 +472,43 @@ class RequestTracker
     private function parseResponseBody(array $response, $delimiter = ':')
     {
         $responseArray = array();
+        $fields = array();
+        $combined = array();
         $lastkey = null;
-
         foreach ($response as $line) {
             //RT will always preface a multiline with the length of the last key + length of $delimiter + one space)
-            if(! is_null($lastkey) && preg_match('/^\s{' . ( strlen($lastkey) + strlen($delimiter) + 1 ) . '}(.*)$/', $line, $matches)) {
+            if (!is_null($lastkey) && preg_match('/^\s{' . (strlen($lastkey) + strlen($delimiter) + 1) . '}(.*)$/', $line, $matches)) {
                 $responseArray[$lastkey] .= "\n" . $matches[1];
             }
-            elseif(! is_null($lastkey) && strlen($line) == 0) {
+            elseif (!is_null($lastkey) && strlen($line) == 0) {
                 $lastkey = null;
             }
-            elseif(preg_match('/^#/', $line, $matches)) {
+            elseif (preg_match('/^#/', $line, $matches)) {
                 $responseArray[$line] = '';
             }
-            elseif(preg_match('~^([a-zA-Z0-9]+|CF\.{[^}]*})' . $delimiter . '\s+(.*)~', $line, $matches)) {
-                $responseArray[$lastkey = $matches[1]] = $matches[2];
+            elseif (preg_match('/^([a-zA-Z0-9]+|CF\.{[^}]+})' . $delimiter . '\s(.*)$/', $line, $matches)) {
+                $lastkey = $matches[1];
+                $responseArray[$lastkey] = $matches[2];
             }
-            elseif ((bool) $line && !is_null($lastkey)) {
-                if (preg_match('/\s{4}/i', $line))
+            elseif ((bool)$line && !is_null($lastkey)) {
+                if (preg_match('/\s{4}/i', $line)) {
                     $line = preg_replace('/\s{4}/i', '', $line);
-                if ($lastkey !== null)
+                }
+                if ($lastkey !== null) {
                     $responseArray[$lastkey] .= PHP_EOL . $line;
+                }
             }
-            elseif(is_null($lastkey) && preg_match('/\t/', $line)) {
-                foreach ($response as $line) {
-                    if (preg_match('/\t/', $line)) {
+            elseif (is_null($lastkey) && preg_match('/\t/', $line)) {
+                foreach ($response as $lines) {
+                    if (preg_match('/\t/', $lines)) {
                         if (is_null($lastkey)) {
-                            $lastkey ++;
-                            $fields = explode("\t", $line);
-                        }
-                        elseif (! is_null($lastkey)) {
-                            $result = explode("\t", $line);
-                                foreach($fields as $key => $val) {
-                                    $combined[$val] = $result[$key];
-                                }
+                            $lastkey++;
+                            $fields = explode("\t", $lines);
+                        } elseif (!is_null($lastkey)) {
+                            $result = explode("\t", $lines);
+                            foreach ($fields as $key => $val) {
+                                $combined[$val] = $result[$key];
+                            }
                             $responseArray[] = $combined;
                         }
                     }
