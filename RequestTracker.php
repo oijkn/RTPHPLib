@@ -424,8 +424,9 @@ class RequestTracker
      * Add link from one ticket to another without worrying about existing links.
      *
      * @param int    $ticket1
-     * @param string $relationship - RefersTo, ReferredToBy, MemberOf, HasMember, DependsOn, DependedOnBy
-     *                             Members, RunsOn, IsRunning, ComponentOf, HasComponent
+     * @param string $relationship - DependsOn/DependedOnBy: A depends upon B (or vice versa).
+     *                             - RefersTo/ReferredToBy:  A refers to B (or vice versa).
+     *                             - MemberOf/HasMember:     A is a member of B (or vice versa).
      * @param int    $ticket2
      * @param bool   $unlink
      *
@@ -627,7 +628,9 @@ class RequestTracker
      *
      * @param string $query   the query to run
      * @param string $orderBy how to order the query
-     * @param string $format  the format type (i,s,l)
+     * @param string $format  -i Numeric IDs only.
+     *                        -s Short description.
+     *                        -l Longer description.
      * @param string $type    search for: 'ticket', 'queue', 'group' or 'user'?
      * @param array  $fields  fields to return
      *
