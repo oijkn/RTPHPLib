@@ -155,7 +155,7 @@ class RequestTracker
                 $fields['user'] = $this->user;
                 $fields['pass'] = $this->pass;
             } elseif (!empty($this->postFields)) {
-                $fields = ['user' => $this->user, 'pass' => $this->pass, 'content' => self::parseArray($this->postFields)];
+                $fields = ['user' => $this->user, 'pass' => $this->pass, 'content' => $this->parseArray($this->postFields)];
             } else {
                 $fields = ['user' => $this->user, 'pass' => $this->pass];
             }
@@ -167,13 +167,13 @@ class RequestTracker
                     $fields['attachment_'.$i++] = $attachment;
                 }
             }
-            $response = self::post($fields);
-            self::setPostFields('');
+            $response = $this->post($fields);
+            $this->setPostFields('');
 
             return $response;
-        } else {
-            throw new AuthenticationException('You must login in first.');
         }
+
+        throw new AuthenticationException('You must login in first.');
     }
 
     /**
@@ -190,10 +190,10 @@ class RequestTracker
     public function login()
     {
         $Url = $this->url.'ticket/1';
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
         $fields = ['user' => $this->user, 'pass' => $this->pass];
-        $response = self::post($fields);
+        $response = $this->post($fields);
 
         if (200 === $response['code']) {
             $this->login = true;
@@ -212,8 +212,8 @@ class RequestTracker
     public function logout()
     {
         $Url = $this->url.'logout';
-        self::setRequestUrl($Url);
-        self::send(true);
+        $this->setRequestUrl($Url);
+        $this->send(true);
 
         $this->login = false;
 
@@ -239,18 +239,18 @@ class RequestTracker
         if (isset($content['Text'])) {
             $content['Text'] = str_replace("\n", "\n ", $content['Text']);
         }
-        self::setRequestUrl($Url);
-        self::setPostFields($content);
+        $this->setRequestUrl($Url);
+        $this->setPostFields($content);
         if (!empty($attachments)) {
             $content['Attachment'] = implode("\n ", array_keys($attachments));
-            self::setPostFields($content);
-            $response = self::send(false, $attachments);
+            $this->setPostFields($content);
+            $response = $this->send(false, $attachments);
         } else {
-            self::setPostFields($content);
-            $response = self::send();
+            $this->setPostFields($content);
+            $response = $this->send();
         }
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -268,11 +268,11 @@ class RequestTracker
     public function editTicket($ticketId, $content)
     {
         $Url = $this->url."ticket/$ticketId/edit";
-        self::setRequestUrl($Url);
-        self::setPostFields($content);
-        $response = self::send();
+        $this->setRequestUrl($Url);
+        $this->setPostFields($content);
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -292,12 +292,12 @@ class RequestTracker
         $content['Action'] = $action;
         $content['id'] = $ticketId;
         $Url = $this->url."ticket/$ticketId/take";
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        self::setPostFields($content);
-        $response = self::send();
+        $this->setPostFields($content);
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -306,7 +306,7 @@ class RequestTracker
      * @param int   $ticketId
      * @param array $content     the ticket fields as fieldname=>fieldvalue array
      * @param array $attachments ticket attachments array keyed by filename.
-     *                           For the array value see self::send() documentation.
+     *                           For the array value see $this->send() documentation.
      *
      * @return array key=>value response pair array
      *
@@ -321,19 +321,19 @@ class RequestTracker
         if (isset($content['Text'])) {
             $content['Text'] = str_replace("\n", "\n ", $content['Text']);
         }
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
         if (!empty($attachments)) {
             $content['Attachment'] = implode("\n ", array_keys($attachments));
-            self::setPostFields($content);
-            $response = self::send(false, $attachments);
+            $this->setPostFields($content);
+            $response = $this->send(false, $attachments);
         } else {
-            self::setPostFields($content);
-            $response = self::send();
+            $this->setPostFields($content);
+            $response = $this->send();
         }
 
         $this->action = 'correspond';
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -342,7 +342,7 @@ class RequestTracker
      * @param int   $ticketId
      * @param array $content
      * @param array $attachments ticket attachments array keyed by filename.
-     *                           For the array value see self::send() documentation.
+     *                           For the array value see $this->send() documentation.
      *
      * @return array key=>value response pair array
      *
@@ -354,7 +354,7 @@ class RequestTracker
     {
         $this->action = 'comment';
 
-        return self::doTicketReply($ticketId, $content, $attachments);
+        return $this->doTicketReply($ticketId, $content, $attachments);
     }
 
     /**
@@ -372,11 +372,11 @@ class RequestTracker
     public function doTicketMerge($ticketId, $intoId)
     {
         $Url = $this->url."ticket/$ticketId/merge/$intoId";
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -393,11 +393,11 @@ class RequestTracker
     public function getTicketProperties($ticketId)
     {
         $Url = $this->url."ticket/$ticketId/show";
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -414,10 +414,10 @@ class RequestTracker
     public function getTicketLinks($ticketId)
     {
         $Url = $this->url."ticket/$ticketId/links/show";
-        self::setRequestUrl($Url);
-        $response = self::send();
+        $this->setRequestUrl($Url);
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -439,22 +439,22 @@ class RequestTracker
     {
         /* Note that this URL does not contain a ticket number. */
         $Url = $this->url.'ticket/link';
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
         $content = [
             'id' => $ticket1,
             'rel' => $relationship,
             'to' => $ticket2,
             'del' => $unlink,
         ];
-        self::setPostFields($content);
+        $this->setPostFields($content);
 
         /*
          * Use $doNotUseContentField = true for the send($doNotUseContentField)
          * function so that the fields won't get pushed into the content field.
          */
-        $response = self::send(true);
+        $response = $this->send(true);
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -472,11 +472,11 @@ class RequestTracker
     public function editTicketLinks($ticketId, $content)
     {
         $Url = $this->url."ticket/$ticketId/links";
-        self::setRequestUrl($Url);
-        self::setPostFields($content);
-        $response = self::send();
+        $this->setRequestUrl($Url);
+        $this->setPostFields($content);
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -493,14 +493,14 @@ class RequestTracker
     public function getTicketAttachments($ticketId)
     {
         $Url = $this->url."ticket/$ticketId/attachments";
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
-        $response = self::parseResponse($response);
+        $response = $this->send();
+        $response = $this->parseResponse($response);
         if (!empty($response['Attachments'])) {
             // Turn Attachments to an array keyed by attachment id:
             $attachments = explode(chr(10), $response['Attachments']);
-            $response = self::parseResponseBody($attachments);
+            $response = $this->parseResponseBody($attachments);
         }
 
         return $response;
@@ -521,11 +521,11 @@ class RequestTracker
     public function getAttachment($ticketId, $attachmentId)
     {
         $Url = $this->url."ticket/$ticketId/attachments/$attachmentId";
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -543,11 +543,11 @@ class RequestTracker
     public function getAttachmentContent($ticketId, $attachmentId)
     {
         $Url = $this->url."ticket/$ticketId/attachments/$attachmentId/content";
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -569,11 +569,11 @@ class RequestTracker
             $Url = $this->url."ticket/$ticketId/history";
         }
 
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return $longFormat ? self::parseLongTicketHistoryResponse($response) : self::parseResponse($response);
+        return $longFormat ? $this->parseLongTicketHistoryResponse($response) : $this->parseResponse($response);
     }
 
     /**
@@ -592,11 +592,11 @@ class RequestTracker
     {
         $Url = $this->url."ticket/$ticketId/history/id/$historyId";
 
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -612,11 +612,11 @@ class RequestTracker
      * @throws HttpException
      * @throws RequestTrackerException
      *
-     * @see self::search()
+     * @see $this->search()
      */
     public function searchTickets($query, $orderby, $format = 's')
     {
-        return self::search($query, $orderby, $format);
+        return $this->search($query, $orderby, $format);
     }
 
     /**
@@ -648,18 +648,18 @@ class RequestTracker
         }
         $Url .= "&orderby=$orderBy&format=$format";
 
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
         $responseArray = [];
 
-        if ('s' == $format) {
-            $responseArray = self::parseResponse($response);
-        } elseif ('i' == $format) {
-            $responseArray = self::parseResponse($response);
-        } elseif ('l' == $format) {
-            $responseArray = self::parseLongFormatSearchResponse($response);
+        if ('s' === $format) {
+            $responseArray = $this->parseResponse($response);
+        } elseif ('i' === $format) {
+            $responseArray = $this->parseResponse($response);
+        } elseif ('l' === $format) {
+            $responseArray = $this->parseLongFormatSearchResponse($response);
         }
 
         return $responseArray;
@@ -673,9 +673,9 @@ class RequestTracker
     protected function parseResponse($response)
     {
         $response = explode(chr(10), $response['body']);
-        $response = self::cleanResponseBody($response);
+        $response = $this->cleanResponseBody($response);
 
-        return self::parseResponseBody($response);
+        return $this->parseResponseBody($response);
     }
 
     /**
@@ -694,7 +694,7 @@ class RequestTracker
             $node = explode(chr(10), $resultString);
             // remove empty line in the end.
             array_pop($node);
-            $resultNodes[] = self::parseResponseBody($node, $delimiter);
+            $resultNodes[] = $this->parseResponseBody($node, $delimiter);
         }
 
         return $resultNodes;
@@ -709,15 +709,15 @@ class RequestTracker
     private function parseLongTicketHistoryResponse($response, $delimiter = ':')
     {
         $historyNodes = [];
-        $historyNodeStrings = preg_split('/\# ([0-9]*)\/([0-9]*) \(id\/([0-9]*)\/total\)/', $response['body']);
+        $historyNodeStrings = preg_split('/\# (\d*)\/(\d*) \(id\/(\d*)\/total\)/', $response['body']);
         // First item contains RT version and newline, remove it.
         unset($historyNodeStrings[0]);
         foreach ($historyNodeStrings as $historyNodeString) {
             $node = explode(chr(10), $historyNodeString);
-            $node = self::cleanResponseBody($node);
-            $node = self::parseResponseBody($node, $delimiter);
+            $node = $this->cleanResponseBody($node);
+            $node = $this->parseResponseBody($node, $delimiter);
             if (!empty($node['Attachments'])) {
-                $node['Attachments'] = self::parseResponseBody(explode(chr(10), $node['Attachments']), $delimiter);
+                $node['Attachments'] = $this->parseResponseBody(explode(chr(10), $node['Attachments']), $delimiter);
             } else {
                 // Normalize to an array.
                 $node['Attachments'] = [];
@@ -753,32 +753,32 @@ class RequestTracker
         $responseArray = [];
         $fields = [];
         $combined = [];
-        $lastkey = null;
+        $lastKey = null;
         foreach ($response as $line) {
             //RT will always preface a multiline with the length of the last key + length of $delimiter + one space)
-            if (!is_null($lastkey) && preg_match('/^\s{'.(strlen($lastkey) + strlen($delimiter) + 1).'}(.*)$/', $line, $matches)) {
-                $responseArray[$lastkey] .= "\n".$matches[1];
-            } elseif (!is_null($lastkey) && 0 == strlen($line)) {
-                $lastkey = null;
+            if (null !== $lastKey && preg_match('/^\s{'.(strlen($lastKey) + strlen($delimiter) + 1).'}(.*)$/', $line, $matches)) {
+                $responseArray[$lastKey] .= "\n".$matches[1];
+            } elseif (null !== $lastKey && 0 === strlen($line)) {
+                $lastKey = null;
             } elseif (preg_match('/^#/', $line, $matches)) {
                 $responseArray[$line] = '';
             } elseif (preg_match('/^([a-zA-Z0-9]+|CF\.{[^}]+})'.$delimiter.'\s(.*)$/', $line, $matches)) {
-                $lastkey = $matches[1];
-                $responseArray[$lastkey] = $matches[2];
-            } elseif ((bool) $line && !is_null($lastkey)) {
-                if (preg_match('/\s{4}/i', $line)) {
-                    $line = preg_replace('/\s{4}/i', '', $line);
+                $lastKey = $matches[1];
+                $responseArray[$lastKey] = $matches[2];
+            } elseif ((bool) $line && null !== $lastKey) {
+                if (preg_match('/\s{4}/', $line)) {
+                    $line = preg_replace('/\s{4}/', '', $line);
                 }
-                if (null !== $lastkey) {
-                    $responseArray[$lastkey] .= PHP_EOL.$line;
+                if (null !== $lastKey) {
+                    $responseArray[$lastKey] .= PHP_EOL.$line;
                 }
-            } elseif (is_null($lastkey) && preg_match('/\t/', $line)) {
+            } elseif (null === $lastKey && preg_match('/\t/', $line)) {
                 foreach ($response as $lines) {
                     if (preg_match('/\t/', $lines)) {
-                        if (is_null($lastkey)) {
-                            ++$lastkey;
+                        if (null === $lastKey) {
+                            ++$lastKey;
                             $fields = explode("\t", $lines);
-                        } elseif (!is_null($lastkey)) {
+                        } elseif (null !== $lastKey) {
                             $result = explode("\t", $lines);
                             foreach ($fields as $key => $val) {
                                 $combined[$val] = $result[$key];
@@ -791,16 +791,16 @@ class RequestTracker
             /*
              * Condition for function getAttachmentContent
              * remove last two keys (empty) and set $responseArray with the 'Content' response
-             * check with preg_match if we are not using self::search() format 'i' : ticket/<ticket-id>
+             * check with preg_match if we are not using $this->search() format 'i' : ticket/<ticket-id>
              */
-            elseif (empty($responseArray) && !preg_match('/^ticket/i', $line)) {
+            elseif (empty($responseArray) && 0 !== stripos($line, 'ticket')) {
                 $splice = array_splice($response, 0, -2);
                 $responseArray = implode('', $splice);
             }
             /*
-             * Condition when we use self::search() with the format 'i'
+             * Condition when we use $this->search() with the format 'i'
              */
-            elseif (preg_match('/^ticket/i', $line)) {
+            elseif (0 === stripos($line, 'ticket')) {
                 $responseArray = $response;
             }
         }
@@ -838,11 +838,11 @@ class RequestTracker
     {
         $Url = $this->url."user/$userId";
 
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -861,12 +861,12 @@ class RequestTracker
         $content['id'] = 'user/new';
         $Url = $this->url.'user/new';
 
-        self::setRequestUrl($Url);
-        self::setPostFields($content);
+        $this->setRequestUrl($Url);
+        $this->setPostFields($content);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -885,12 +885,12 @@ class RequestTracker
     {
         $Url = $this->url."user/$userId/edit";
 
-        self::setRequestUrl($Url);
-        self::setPostFields($content);
+        $this->setRequestUrl($Url);
+        $this->setPostFields($content);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -906,11 +906,11 @@ class RequestTracker
      * @throws HttpException
      * @throws RequestTrackerException
      *
-     * @see self::search()
+     * @see $this->search()
      */
     public function searchUsers($query = '', $orderby = '', $format = 's')
     {
-        return self::search($query, $orderby, $format, 'user');
+        return $this->search($query, $orderby, $format, 'user');
     }
 
     /**
@@ -928,11 +928,11 @@ class RequestTracker
     {
         $Url = $this->url."queue/$queueId";
 
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -948,11 +948,11 @@ class RequestTracker
      * @throws HttpException
      * @throws RequestTrackerException
      *
-     * @see self::search()
+     * @see $this->search()
      */
     public function searchQueues($query = '', $orderby = '', $format = 's')
     {
-        return self::search($query, $orderby, $format, 'queue');
+        return $this->search($query, $orderby, $format, 'queue');
     }
 
     /**
@@ -975,11 +975,11 @@ class RequestTracker
             $Url .= '?fields='.implode(',', $fields);
         }
 
-        self::setRequestUrl($Url);
+        $this->setRequestUrl($Url);
 
-        $response = self::send();
+        $response = $this->send();
 
-        return self::parseResponse($response);
+        return $this->parseResponse($response);
     }
 
     /**
@@ -995,11 +995,11 @@ class RequestTracker
      * @throws HttpException
      * @throws RequestTrackerException
      *
-     * @see self::search()
+     * @see $this->search()
      */
     public function searchGroups($query = '', $orderby = '', $format = 's')
     {
-        return self::search($query, $orderby, $format, 'group');
+        return $this->search($query, $orderby, $format, 'group');
     }
 
     /**
@@ -1059,10 +1059,8 @@ class RequestTracker
             curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-type: $contentType"]);
         }
 
-        if (!$this->enableSslVerification) {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        }
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, !$this->enableSslVerification ? 0 : 2);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$this->enableSslVerification ? 0 : 1);
 
         array_unshift($data, '');
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -1083,15 +1081,15 @@ class RequestTracker
         //  RT/4.4.1 401 Credentials required
         //
         //  Your username or password is incorrect
-        if (200 == $code && preg_match('#^RT/\d+(?:\S+) (\d+) ([\w\s]+)$#', $response, $matches)) {
+        if (200 === $code && preg_match('#^RT/\d+(?:\S+) (\d+) ([\w\s]+)$#', $response, $matches)) {
             $code = $matches[1];
         }
 
-        if (401 == $code) {
+        if (401 === $code) {
             throw new AuthenticationException('The user credentials were refused.');
         }
 
-        if (200 != $code) {
+        if (200 !== $code) {
             throw new HttpException("An error occurred : [$code] :: $response");
         }
 
