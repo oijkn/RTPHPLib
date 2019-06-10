@@ -1051,7 +1051,7 @@ class RequestTracker
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->requestUrl);
         curl_setopt($ch, CURLOPT_POST, 1);
-        if ('' != $this->proxy) {
+        if ('' !== $this->proxy) {
             curl_setopt($ch, CURLOPT_PROXY, $this->proxy);
         }
 
